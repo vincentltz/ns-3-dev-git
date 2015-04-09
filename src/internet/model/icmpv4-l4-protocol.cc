@@ -23,7 +23,6 @@ Icmpv4L4Protocol::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::Icmpv4L4Protocol")
     .SetParent<IpL4Protocol> ()
-    .SetGroupName ("Internet")
     .AddConstructor<Icmpv4L4Protocol> ()
   ;
   return tid;
@@ -112,7 +111,6 @@ Icmpv4L4Protocol::SendMessage (Ptr<Packet> packet, Ipv4Address dest, uint8_t typ
       NS_LOG_WARN ("drop icmp message");
     }
 }
-
 void
 Icmpv4L4Protocol::SendMessage (Ptr<Packet> packet, Ipv4Address source, Ipv4Address dest, uint8_t type, uint8_t code, Ptr<Ipv4Route> route)
 {
@@ -168,6 +166,46 @@ Icmpv4L4Protocol::SendTimeExceededTtl (Ipv4Header header, Ptr<const Packet> orgD
   p->AddHeader (time);
   SendMessage (p, header.GetSource (), Icmpv4Header::TIME_EXCEEDED, Icmpv4TimeExceeded::TIME_TO_LIVE);
 }
+
+/******************************************************************************************************/
+// Modified from SendTimeExceededTtl
+void
+Icmpv4L4Protocol::SendAck (Ipv4Header header)
+{
+  NS_LOG_FUNCTION (this << header);
+  NS_LOG_INFO("Icmpv4L4Protocol::SendAck");
+  Ptr<Packet> p = Create<Packet> ();
+  Icmpv4Ack ack;
+  ack.SetHeader (header);
+  p->AddHeader (ack);
+  SendMessage (p, header.GetDestination (), Icmpv4Header::ACK, 0);
+}
+// Modified from SendTimeExceededTtl
+void
+Icmpv4L4Protocol::SendRequest (Ipv4Header header)
+{
+  NS_LOG_FUNCTION (this << header);
+  NS_LOG_INFO("Icmpv4L4Protocol::SendRequest");
+  Ptr<Packet> p = Create<Packet> ();
+  Icmpv4Request request;
+  request.SetHeader (header);
+  p->AddHeader (request);
+  SendMessage (p, header.GetDestination (), Icmpv4Header::REQUEST, 0);
+}
+// Modified from SendTimeExceededTtl
+void
+Icmpv4L4Protocol::SendData (Ipv4Header header, uint8_t payload[8])
+{
+  NS_LOG_FUNCTION (this << header << payload);
+  NS_LOG_INFO("Icmpv4L4Protocol::SendData");
+  Ptr<Packet> p = Create<Packet> ();
+  Icmpv4Data data;
+  data.SetHeader (header);
+  data.SetData (payload);
+  p->AddHeader (data);
+  SendMessage (p, header.GetDestination (), Icmpv4Header::DATA, 0);
+}
+/******************************************************************************************************/
 
 void
 Icmpv4L4Protocol::HandleEcho (Ptr<Packet> p,
@@ -230,6 +268,48 @@ Icmpv4L4Protocol::HandleTimeExceeded (Ptr<Packet> p,
   Forward (source, icmp, 0, ipHeader, payload);
 }
 
+/******************************************************************************************************/
+Ptr<GossipGenerator>
+Icmpv4L4Protocol::GetGossipApp(Ptr<Ipv4Interface> incomingInterface)
+{
+  Ptr <Node> node = incomingInterface->GetDevice()->GetNode ();
+  Ptr< Application > gossipApp = node->GetApplication (0) ;
+  return DynamicCast<GossipGenerator>(gossipApp);
+}
+//Modified from HandleTimeExceeded
+void
+Icmpv4L4Protocol::HandleAck (Ptr<Packet> p, Icmpv4Header icmp, Ipv4Address source, Ipv4Address destination, Ptr<Ipv4Interface> incomingInterface)
+{
+  NS_LOG_FUNCTION (this << p << icmp << source << destination);
+  NS_LOG_INFO ("Icmpv4L4Protocol::HandleAck");
+  Ptr<GossipGenerator> GossipApp = GetGossipApp(incomingInterface);
+  GossipApp->HandleAck();
+}
+//Modified from HandleTimeExceeded
+void
+Icmpv4L4Protocol::HandleRequest (Ptr<Packet> p, Icmpv4Header icmp, Ipv4Address source, Ipv4Address destination, Ptr<Ipv4Interface> incomingInterface)
+{
+  NS_LOG_FUNCTION (this << p << icmp << source << destination);
+  NS_LOG_INFO ("Icmpv4L4Protocol::HandleRequest");
+  Ptr<GossipGenerator> GossipApp = GetGossipApp(incomingInterface);
+  GossipApp->HandleSolicit(source, destination);
+}
+//Modified from HandleTimeExceeded
+void
+Icmpv4L4Protocol::HandleData (Ptr<Packet> p, Icmpv4Header icmp, Ipv4Address source, Ipv4Address destination, Ptr<Ipv4Interface> incomingInterface)
+{
+  NS_LOG_FUNCTION (this << p << icmp << source << destination);
+  NS_LOG_INFO ("Icmpv4L4Protocol::HandleData");
+  Ptr<GossipGenerator> GossipApp = GetGossipApp(incomingInterface);
+
+  Icmpv4Data data;
+  p->PeekHeader (data);
+  uint8_t payload[8];
+  data.GetData (payload);
+  GossipApp->HandlePayload(source, destination,payload);  
+}
+/******************************************************************************************************/
+
 enum IpL4Protocol::RxStatus
 Icmpv4L4Protocol::Receive (Ptr<Packet> p,
                            Ipv4Header const &header,
@@ -249,12 +329,24 @@ Icmpv4L4Protocol::Receive (Ptr<Packet> p,
     case Icmpv4Header::TIME_EXCEEDED:
       HandleTimeExceeded (p, icmp, header.GetSource (), header.GetDestination ());
       break;
+/*****************************************************************************************************/
+    case Icmpv4Header::ACK:
+      HandleAck (p, icmp, header.GetSource (), header.GetDestination (), incomingInterface);
+      break;
+    case Icmpv4Header::REQUEST:
+      HandleRequest (p, icmp, header.GetSource (), header.GetDestination (),  incomingInterface);
+      break;
+    case Icmpv4Header::DATA:
+      HandleData (p, icmp, header.GetSource (), header.GetDestination (),  incomingInterface);
+      break;
+/*****************************************************************************************************/
     default:
       NS_LOG_DEBUG (icmp << " " << *p);
       break;
     }
   return IpL4Protocol::RX_OK;
 }
+
 enum IpL4Protocol::RxStatus
 Icmpv4L4Protocol::Receive (Ptr<Packet> p,
                            Ipv6Header const &header,
