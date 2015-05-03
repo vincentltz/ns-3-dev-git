@@ -55,13 +55,13 @@ class simstats {
     simstats(double, int, double);
     int getHops(void);
     double getTime(void);
-    double getAvgMsgs(void);
+    double getAvgMsg(void);
 }; 
 
-simstats::simstats (double t, int h, double a) {
+simstats::simstats (double t, int h, double msg) {
     time = t;
     hops = h;
-    avgMsg = a;
+    avgMsg = msg;
 }
 
 int simstats::getHops(void){
@@ -72,7 +72,7 @@ double simstats::getTime(void){
     return time;
 }
 
-double simstats::getAvgMsgs(void){
+double simstats::getAvgMsg(void){
     return avgMsg;
 }
 
