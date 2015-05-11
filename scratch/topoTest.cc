@@ -114,8 +114,8 @@ simstats simulation(char *filename) {
     Topology.open (filename);
     while(getline(Topology,Line)) {
         if (!Line.compare(0, NodePrefix.size(), NodePrefix)) {
-        ParseNodes = true;
-        continue;
+            ParseNodes = true;
+            continue;
         }
         if (!Line.compare(0, EdgePrefix.size(), EdgePrefix)) {
             ParseNodes = false;
@@ -131,7 +131,7 @@ simstats simulation(char *filename) {
             continue;
         }
         if (ParseNodes) {
-            istringstream(Line) >> NodeNumber; // Just update til end
+            istringstream(Line) >> NodeNumber; // Just update till end
             NodeNumber++; // convert max_index -> length
         }
         if (ParseEdges) { // Format: (12, 14)
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
     LogComponentEnable ("GenericTopologyCreation", LOG_LEVEL_INFO);
     // LogComponentEnable ("Icmpv4L4Protocol", LOG_LEVEL_INFO);
 
-    // srand(time(NULL));
+    srand(time(NULL));
 
     //These are the default values for the command line
     // if you do not override them via n3 command lines, this is what will run
@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
     std::string outTimeFile = "scratch/maxtime.txt";
     std::string outAvgMsgFile = "scratch/avgmsg.txt";
 
-    //This lets you add command line arguments in n3 
+    //This lets you add command line arguments in ns-3
     // to view all command line arguments when you run the program type:
     // ./waf --run "topoTest --help"
     //
@@ -235,7 +235,7 @@ int main(int argc, char *argv[]) {
     cmd.Parse (argc, argv);
 
     //All of the functions take char * not strings
-    //but n3 doesnt have command line entries for char * so they need to be converted from string to char *
+    //but ns-3 doesn't have command line entries for char * so they need to be converted from string to char *
     char *newTopoFile = convertStrToChar(inTopologyFile);
     char *newHopsFile = convertStrToChar(outHopsFile);
     char *newTimeFile = convertStrToChar(outTimeFile);
