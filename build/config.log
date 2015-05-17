@@ -1,4 +1,4 @@
-# project ns (3-dev) configured on Wed Apr  8 22:05:22 2015 by
+# project ns (3-dev) configured on Sun May 17 08:19:45 2015 by
 # waf 1.7.16 (abi 98, python 20703f0 on linux2)
 # using ./waf --build-profile=optimized configure
 #
@@ -239,7 +239,7 @@ from /home/tingzhi/Downloads/ns-3-dev-git/src/core: Test does not build: Traceba
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 45443920: cxx test.cpp -> test.cpp.1.o}
+	{task 34541072: cxx test.cpp -> test.cpp.1.o}
 ['/usr/bin/g++', '-O3', '-g', '-Wall', '-Werror', '-march=native', '-fstrict-overflow', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 
 from /home/tingzhi/Downloads/ns-3-dev-git/src/core: The configuration failed
@@ -312,7 +312,7 @@ from /home/tingzhi/Downloads/ns-3-dev-git/src/core: Test does not build: Traceba
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 46297232: cxx test.cpp -> test.cpp.1.o}
+	{task 35394384: cxx test.cpp -> test.cpp.1.o}
 ['/usr/bin/g++', '-O3', '-g', '-Wall', '-Werror', '-march=native', '-fstrict-overflow', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 
 from /home/tingzhi/Downloads/ns-3-dev-git/src/core: The configuration failed
@@ -460,7 +460,7 @@ from /home/tingzhi/Downloads/ns-3-dev-git/src/core: Test does not build: Traceba
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 46340304: cxx test.cpp -> test.cpp.1.o}
+	{task 35425168: cxx test.cpp -> test.cpp.1.o}
 ['/usr/bin/g++', '-O3', '-g', '-Wall', '-Werror', '-march=native', '-fstrict-overflow', '-DHAVE___UINT128_T=1', '-DINT64X64_USE_128=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 
 from /home/tingzhi/Downloads/ns-3-dev-git/src/core: The configuration failed

@@ -89,8 +89,9 @@ simstats simulation(char *filename) {
     NS_LOG_INFO ("Filename : " << filename << " to read from for  GossipGenerator");
     
     std::string phyMode ("DsssRate1Mbps");
-    double distance = 500; // m
-    
+    double distance = 5; // m
+    //double rss = -20; // dBm
+
     NodeContainer nodes;
     NetDeviceContainer devices;
     Ipv4InterfaceContainer interfaces;
@@ -102,7 +103,7 @@ simstats simulation(char *filename) {
     // disable fragmentation for frames below 2200 bytes
     Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
     // turn off RTS/CTS for frames below 2200 bytes
-    Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
+    //Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
     // Fix non-unicast data rate to be the same as that of unicast
     Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
                         StringValue (phyMode));
@@ -117,6 +118,7 @@ simstats simulation(char *filename) {
     YansWifiChannelHelper wifiChannel;
     wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
     
+    //wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel", "Rss", DoubleValue(rss));
     wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel");
     wifiPhy.SetChannel (wifiChannel.Create ());
     
@@ -154,18 +156,19 @@ simstats simulation(char *filename) {
             nodes.Create(NodeNumber);
             NS_LOG_INFO ("Install Internet Stack and GossipGenerator to those nodes.");
             devices = wifi.Install(wifiPhy, wifiMac, nodes);
-            
+           
+	     
             MobilityHelper mobility;
             mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
                                            "MinX", DoubleValue (0.0),
                                            "MinY", DoubleValue (0.0),
                                            "DeltaX", DoubleValue (distance),
                                            "DeltaY", DoubleValue (distance),
-                                           "GridWidth", UintegerValue (5),
+                                           "GridWidth", UintegerValue (10),
                                            "LayoutType", StringValue ("RowFirst"));
             mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
             mobility.Install (nodes);
-
+	    /*
             // Enable OLSR
             OlsrHelper olsr;
             Ipv4StaticRoutingHelper staticRouting;
@@ -175,7 +178,7 @@ simstats simulation(char *filename) {
             list.Add (olsr, 10);
             
             stack.SetRoutingHelper (list); // has effect on the next Install ()
-            
+            */
             /*
             MobilityHelper mobility;
             Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
@@ -318,7 +321,7 @@ int main(int argc, char *argv[]) {
     avgfile = fopen(newAvgMsgFile, "a+");
 
     if (timefile != NULL && hopfile != NULL && avgfile != NULL){
-      for (int i = 0; i < 1; i++){
+      for (int i = 0; i < 10; i++){
         simstats results = simulation(newTopoFile);
         fprintf(timefile,"%f\n", results.getTime());
         fprintf(hopfile,"%d\n", results.getHops());
