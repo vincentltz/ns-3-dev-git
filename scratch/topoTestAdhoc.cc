@@ -39,6 +39,10 @@
 #include "ns3/netanim-module.h"
 #include "ns3/assert.h"
 
+//New header files for wifi and LAN
+#include "ns3/wifi-module.h"
+#include "ns3/config-store-module.h"
+
 #include "ns3/gossip-generator.h"
 #include "ns3/gossip-generator-helper.h"
 
@@ -56,7 +60,6 @@ class simstats {
     int getHops(void);
     double getTime(void);
     double getAvgMsg(void);
-	
 }; 
 
 simstats::simstats (double t, int h, double msg) {
@@ -84,19 +87,38 @@ Ptr<GossipGenerator> GetGossipApp(Ptr <Node> node) {
 
 simstats simulation(char *filename) {
     NS_LOG_INFO ("Filename : " << filename << " to read from for  GossipGenerator");
-
-    std::string LinkRate ("100Mbps"); // 10kbps. Need to change to wifi channel
-    std::string LinkDelay ("2ms");
-    PointToPointHelper p2p;
-    p2p.SetDeviceAttribute ("DataRate", StringValue (LinkRate));
-    p2p.SetChannelAttribute ("Delay", StringValue (LinkDelay));
-
-    InternetStackHelper internet;
-
-    Ipv4AddressHelper ipv4_n;
-    ipv4_n.SetBase ("10.0.0.0", "255.255.255.252"); //Netmask setting
-
-    NodeContainer nodes2;
+    
+    std::string phyMode ("DsssRate1Mbps");
+    double rss = -80;  // -dBm
+    
+    NodeContainer nodes;
+    NetDeviceContainer devices;
+    Ipv4InterfaceContainer interfaces;
+    WifiHelper wifi;
+    InternetStackHelper stack;
+    Ipv4AddressHelper ipv4;
+    
+    wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
+    
+    YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
+    // This is one parameter that matters when using FixedRssLossModel
+    // set it to zero; otherwise, gain will be added
+    wifiPhy.Set ("RxGain", DoubleValue (0) );
+    
+    YansWifiChannelHelper wifiChannel;
+    wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+    // The below FixedRssLossModel will cause the rss to be fixed regardless
+    // of the distance between the two stations, and the transmit power
+    wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
+    wifiPhy.SetChannel (wifiChannel.Create ());
+    
+    // Add a non-QoS upper mac, and disable rate control
+    NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
+    wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
+                                  "DataMode",StringValue (phyMode),
+                                  "ControlMode",StringValue (phyMode));
+    // Set it to adhoc mode
+    wifiMac.SetType ("ns3::AdhocWifiMac");
 
     GossipGeneratorHelper ggh ;
     Time GossipInterval = Seconds(.005); // Must be larger than the round-trip-time! (c.f. LinkDelay)
@@ -121,11 +143,15 @@ simstats simulation(char *filename) {
         if (!Line.compare(0, EdgePrefix.size(), EdgePrefix)) {
             ParseNodes = false;
             NS_LOG_INFO ("Create " << NodeNumber << " nodes to test GossipGenerator");
-            nodes2.Create(NodeNumber);
-
+            nodes.Create(NodeNumber);
             NS_LOG_INFO ("Install Internet Stack and GossipGenerator to those nodes.");
-            internet.Install (nodes2);
-            nodeApps = ggh.Install(nodes2);
+            devices = wifi.Install(wifiPhy, wifiMac, nodes);
+            stack.Install (nodes);
+            
+            NS_LOG_INFO ("Assign IP Addresses.");
+            ipv4.SetBase ("10.1.1.0", "255.255.255.0");
+            interfaces = ipv4.Assign (devices);
+            nodeApps = ggh.Install(nodes);
 
             NS_LOG_INFO ("Assign Addresses to Nodes and Create Links Between Nodes...");
             ParseEdges = true;
@@ -141,22 +167,22 @@ simstats simulation(char *filename) {
 
             NS_LOG_INFO("Parsed Edge: (" << Edge1 << ", " << Edge2 << ")");
 
-            Ipv4InterfaceContainer InterfaceCont = ipv4_n.Assign (p2p.Install (NodeContainer (nodes2.Get (Edge1), nodes2.Get(Edge2))));
-            ipv4_n.NewNetwork ();
-            GetGossipApp(nodes2.Get(Edge1))->AddNeighbor(InterfaceCont.GetAddress(0),InterfaceCont.GetAddress(1));
-            GetGossipApp(nodes2.Get(Edge2))->AddNeighbor(InterfaceCont.GetAddress(1),InterfaceCont.GetAddress(0));
+            //Ipv4InterfaceContainer InterfaceCont = ipv4.Assign (p2p.Install (NodeContainer (nodes2.Get (Edge1), nodes2.Get(Edge2))));
+            //ipv4_n.NewNetwork ();
+            GetGossipApp(nodes.Get(Edge1))->AddNeighbor(InterfaceCont.GetAddress(0),InterfaceCont.GetAddress(1));
+            GetGossipApp(nodes.Get(Edge2))->AddNeighbor(InterfaceCont.GetAddress(1),InterfaceCont.GetAddress(0));
         }
     }
     Topology.close();
     /* Parser Code - End */
 
     for ( int i=0; i<NodeNumber;++i) { //TODO use attributes
-        Ptr<GossipGenerator> ii = GetGossipApp(nodes2.Get(i));
+        Ptr<GossipGenerator> ii = GetGossipApp(nodes.Get(i));
         ii->SetGossipInterval(GossipInterval);
         ii->SetSolicitInterval(SolicitInterval);
     }
 
-    Ptr<GossipGenerator> a = GetGossipApp(nodes2.Get(0));
+    Ptr<GossipGenerator> a = GetGossipApp(nodes.Get(0));
     a->SetCurrentValue( 2 );
     //a->SendMessage_debug( src,dest, TYPE_ACK );
 
@@ -167,7 +193,7 @@ simstats simulation(char *filename) {
     Time MaxTime = Seconds(0);
     double AvgMessagesPerNode = 0;
     for ( int i=0; i<NodeNumber;++i) {
-        Ptr<GossipGenerator> ii = GetGossipApp(nodes2.Get(i));
+        Ptr<GossipGenerator> ii = GetGossipApp(nodes.Get(i));
         if (MaxHops < ii->GetPacketHops()){
             MaxHops = ii->GetPacketHops();
         }
@@ -257,7 +283,7 @@ int main(int argc, char *argv[]) {
         simstats results = simulation(newTopoFile);
         fprintf(timefile,"%f\n", results.getTime());
         fprintf(hopfile,"%d\n", results.getHops());
-        fprintf(avgfile,"%f\n", results.getAvgMsg());
+        fprintf(avgfile,"%f\n", results.getAvgMsgs());
         sleep(1);
       }
     }
