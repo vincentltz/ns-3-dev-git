@@ -169,8 +169,8 @@ simstats simulation(char *filename) {
 
             //Ipv4InterfaceContainer InterfaceCont = ipv4.Assign (p2p.Install (NodeContainer (nodes2.Get (Edge1), nodes2.Get(Edge2))));
             //ipv4_n.NewNetwork ();
-            GetGossipApp(nodes.Get(Edge1))->AddNeighbor(interfaces.GetAddress(0),InterfaceCont.GetAddress(1));
-            GetGossipApp(nodes.Get(Edge2))->AddNeighbor(interfaces.GetAddress(1),InterfaceCont.GetAddress(0));
+            GetGossipApp(nodes.Get(Edge1))->AddNeighbor(interfaces.GetAddress(0),interfaces.GetAddress(1));
+            GetGossipApp(nodes.Get(Edge2))->AddNeighbor(interfaces.GetAddress(1),interfaces.GetAddress(0));
         }
     }
     Topology.close();
