@@ -56,6 +56,7 @@ class simstats {
     int getHops(void);
     double getTime(void);
     double getAvgMsg(void);
+	
 }; 
 
 simstats::simstats (double t, int h, double msg) {
@@ -256,7 +257,7 @@ int main(int argc, char *argv[]) {
         simstats results = simulation(newTopoFile);
         fprintf(timefile,"%f\n", results.getTime());
         fprintf(hopfile,"%d\n", results.getHops());
-        fprintf(avgfile,"%f\n", results.getAvgMsgs());
+        fprintf(avgfile,"%f\n", results.getAvgMsg());
         sleep(1);
       }
     }
