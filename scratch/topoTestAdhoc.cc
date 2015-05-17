@@ -169,8 +169,8 @@ simstats simulation(char *filename) {
 
             //Ipv4InterfaceContainer InterfaceCont = ipv4.Assign (p2p.Install (NodeContainer (nodes2.Get (Edge1), nodes2.Get(Edge2))));
             //ipv4_n.NewNetwork ();
-            GetGossipApp(nodes.Get(Edge1))->AddNeighbor(InterfaceCont.GetAddress(0),InterfaceCont.GetAddress(1));
-            GetGossipApp(nodes.Get(Edge2))->AddNeighbor(InterfaceCont.GetAddress(1),InterfaceCont.GetAddress(0));
+            GetGossipApp(nodes.Get(Edge1))->AddNeighbor(interfaces.GetAddress(0),InterfaceCont.GetAddress(1));
+            GetGossipApp(nodes.Get(Edge2))->AddNeighbor(interfaces.GetAddress(1),InterfaceCont.GetAddress(0));
         }
     }
     Topology.close();
@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
         simstats results = simulation(newTopoFile);
         fprintf(timefile,"%f\n", results.getTime());
         fprintf(hopfile,"%d\n", results.getHops());
-        fprintf(avgfile,"%f\n", results.getAvgMsgs());
+        fprintf(avgfile,"%f\n", results.getAvgMsg());
         sleep(1);
       }
     }
