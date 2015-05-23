@@ -39,6 +39,10 @@
 #include "ns3/netanim-module.h"
 #include "ns3/assert.h"
 
+//New header files for wifi and LAN
+#include "ns3/wifi-module.h"
+#include "ns3/csma-module.h"
+
 #include "ns3/gossip-generator.h"
 #include "ns3/gossip-generator-helper.h"
 
@@ -83,9 +87,11 @@ Ptr<GossipGenerator> GetGossipApp(Ptr <Node> node) {
 
 simstats simulation(char *filename) {
     NS_LOG_INFO ("Filename : " << filename << " to read from for  GossipGenerator");
-
+    
+    /*
     std::string LinkRate ("100Mbps"); // 10kbps. Need to change to wifi channel
     std::string LinkDelay ("2ms");
+
     PointToPointHelper p2p;
     p2p.SetDeviceAttribute ("DataRate", StringValue (LinkRate));
     p2p.SetChannelAttribute ("Delay", StringValue (LinkDelay));
@@ -94,9 +100,12 @@ simstats simulation(char *filename) {
 
     Ipv4AddressHelper ipv4_n;
     ipv4_n.SetBase ("10.0.0.0", "255.255.255.252"); //Netmask setting
-
-    NodeContainer nodes2;
-
+    */
+    
+    NodeContainer wifiStaNodes;
+    NodeContainer wifiApNode;
+    InternetStackHelper stack;
+    
     GossipGeneratorHelper ggh ;
     Time GossipInterval = Seconds(.005); // Must be larger than the round-trip-time! (c.f. LinkDelay)
     Time SolicitInterval = Seconds(5); // Should be larger than the GossipInterval!
@@ -120,11 +129,14 @@ simstats simulation(char *filename) {
         if (!Line.compare(0, EdgePrefix.size(), EdgePrefix)) {
             ParseNodes = false;
             NS_LOG_INFO ("Create " << NodeNumber << " nodes to test GossipGenerator");
-            nodes2.Create(NodeNumber);
-
+            wifiStaNodes.Create(NodeNumber);
+            wifiApNode = wifiStaNodes.Get(0);
             NS_LOG_INFO ("Install Internet Stack and GossipGenerator to those nodes.");
-            internet.Install (nodes2);
-            nodeApps = ggh.Install(nodes2);
+            stack.Install(wifiApNode);
+            stack.Install (wifiStaNodes);
+            
+            nodeApps = ggh.Install(wifiApNode);
+            nodeApps = ggh.Install(wifiStaNodes);
 
             NS_LOG_INFO ("Assign Addresses to Nodes and Create Links Between Nodes...");
             ParseEdges = true;
