@@ -144,6 +144,15 @@ simstats simulation(char *filename) {
             nodes.Create(NodeNumber);
             NS_LOG_INFO ("Install Internet Stack and GossipGenerator to those nodes.");
             devices = wifi.Install(wifiPhy, wifiMac, nodes);
+            
+            MobilityHelper mobility;
+            Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
+            positionAlloc->Add (Vector (0.0, 0.0, 0.0));
+            positionAlloc->Add (Vector (5.0, 0.0, 0.0));
+            mobility.SetPositionAllocator (positionAlloc);
+            mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+            mobility.Install (nodes);
+            
             stack.Install (nodes);
             
             NS_LOG_INFO ("Assign IP Addresses.");
