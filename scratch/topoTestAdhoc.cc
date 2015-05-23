@@ -32,14 +32,11 @@
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
-#include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/global-route-manager.h"
 #include "ns3/mobility-module.h"
-#include "ns3/netanim-module.h"
 #include "ns3/assert.h"
 
-//New header files for wifi and LAN
 #include "ns3/wifi-module.h"
 #include "ns3/config-store-module.h"
 
@@ -94,6 +91,7 @@ simstats simulation(char *filename) {
     NodeContainer nodes;
     NetDeviceContainer devices;
     Ipv4InterfaceContainer interfaces;
+    
     WifiHelper wifi;
     InternetStackHelper stack;
     Ipv4AddressHelper ipv4;
@@ -120,7 +118,7 @@ simstats simulation(char *filename) {
     // Set it to adhoc mode
     wifiMac.SetType ("ns3::AdhocWifiMac");
 
-    GossipGeneratorHelper ggh ;
+    GossipGeneratorHelper ggh;
     Time GossipInterval = Seconds(.005); // Must be larger than the round-trip-time! (c.f. LinkDelay)
     Time SolicitInterval = Seconds(5); // Should be larger than the GossipInterval!
     ApplicationContainer nodeApps; // TODO unused
