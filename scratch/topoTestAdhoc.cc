@@ -39,6 +39,9 @@
 
 #include "ns3/wifi-module.h"
 #include "ns3/config-store-module.h"
+#include "ns3/olsr-helper.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/ipv4-list-routing-helper.h"
 
 #include "ns3/gossip-generator.h"
 #include "ns3/gossip-generator-helper.h"
@@ -86,7 +89,7 @@ simstats simulation(char *filename) {
     NS_LOG_INFO ("Filename : " << filename << " to read from for  GossipGenerator");
     
     std::string phyMode ("DsssRate1Mbps");
-    double rss = -80;  // -dBm
+    double distance = 500; // m
     
     NodeContainer nodes;
     NetDeviceContainer devices;
@@ -95,6 +98,14 @@ simstats simulation(char *filename) {
     WifiHelper wifi;
     InternetStackHelper stack;
     Ipv4AddressHelper ipv4;
+    
+    // disable fragmentation for frames below 2200 bytes
+    Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
+    // turn off RTS/CTS for frames below 2200 bytes
+    Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("2200"));
+    // Fix non-unicast data rate to be the same as that of unicast
+    Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
+                        StringValue (phyMode));
     
     wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
     
@@ -105,9 +116,8 @@ simstats simulation(char *filename) {
     
     YansWifiChannelHelper wifiChannel;
     wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-    // The below FixedRssLossModel will cause the rss to be fixed regardless
-    // of the distance between the two stations, and the transmit power
-    wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
+    
+    wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel");
     wifiPhy.SetChannel (wifiChannel.Create ());
     
     // Add a non-QoS upper mac, and disable rate control
@@ -146,13 +156,36 @@ simstats simulation(char *filename) {
             devices = wifi.Install(wifiPhy, wifiMac, nodes);
             
             MobilityHelper mobility;
+            mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
+                                           "MinX", DoubleValue (0.0),
+                                           "MinY", DoubleValue (0.0),
+                                           "DeltaX", DoubleValue (distance),
+                                           "DeltaY", DoubleValue (distance),
+                                           "GridWidth", UintegerValue (5),
+                                           "LayoutType", StringValue ("RowFirst"));
+            mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+            mobility.Install (nodes);
+
+            // Enable OLSR
+            OlsrHelper olsr;
+            Ipv4StaticRoutingHelper staticRouting;
+            
+            Ipv4ListRoutingHelper list;
+            list.Add (staticRouting, 0);
+            list.Add (olsr, 10);
+            
+            stack.SetRoutingHelper (list); // has effect on the next Install ()
+            stack.Install (c);
+            
+            /*
+            MobilityHelper mobility;
             Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
             positionAlloc->Add (Vector (0.0, 0.0, 0.0));
             positionAlloc->Add (Vector (5.0, 0.0, 0.0));
             mobility.SetPositionAllocator (positionAlloc);
             mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
             mobility.Install (nodes);
-            
+            */
             stack.Install (nodes);
             
             NS_LOG_INFO ("Assign IP Addresses.");
