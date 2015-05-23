@@ -175,7 +175,6 @@ simstats simulation(char *filename) {
             list.Add (olsr, 10);
             
             stack.SetRoutingHelper (list); // has effect on the next Install ()
-            stack.Install (c);
             
             /*
             MobilityHelper mobility;
