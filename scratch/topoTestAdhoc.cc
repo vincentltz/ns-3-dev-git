@@ -27,6 +27,7 @@
 #include <typeinfo>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "ns3/object.h"
 #include "ns3/core-module.h"
@@ -157,14 +158,14 @@ simstats simulation(char *filename) {
             NS_LOG_INFO ("Install Internet Stack and GossipGenerator to those nodes.");
             devices = wifi.Install(wifiPhy, wifiMac, nodes);
            
-	     
+	    int width = sqrt(NodeNumber); 
             MobilityHelper mobility;
             mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
                                            "MinX", DoubleValue (0.0),
                                            "MinY", DoubleValue (0.0),
                                            "DeltaX", DoubleValue (distance),
                                            "DeltaY", DoubleValue (distance),
-                                           "GridWidth", UintegerValue (10),
+                                           "GridWidth", UintegerValue (width),
                                            "LayoutType", StringValue ("RowFirst"));
             mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
             mobility.Install (nodes);
