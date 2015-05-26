@@ -27,7 +27,6 @@
 #include <typeinfo>
 #include <time.h>
 #include <unistd.h>
-#include <math.h>
 
 #include "ns3/object.h"
 #include "ns3/core-module.h"
@@ -165,7 +164,7 @@ simstats simulation(char *filename) {
                                            "MinY", DoubleValue (0.0),
                                            "DeltaX", DoubleValue (distance),
                                            "DeltaY", DoubleValue (distance),
-                                           "GridWidth", UintegerValue ((int)sqrt(NodeNumber)),
+                                           "GridWidth", UintegerValue (10),
                                            "LayoutType", StringValue ("RowFirst"));
             mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
             mobility.Install (nodes);
