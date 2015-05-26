@@ -1,5 +1,5 @@
 
-FILES=~/randomTopolog/Net_400_*
+FILES=~/randomTopology/Net_400_*
 
 for f in $FILES
 do
